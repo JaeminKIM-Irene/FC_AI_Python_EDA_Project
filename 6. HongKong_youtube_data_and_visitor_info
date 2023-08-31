@@ -1,0 +1,411 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 62,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "The autoreload extension is already loaded. To reload it, use:\n",
+      "  %reload_ext autoreload\n"
+     ]
+    }
+   ],
+   "source": [
+    "%load_ext autoreload\n",
+    "%autoreload 2"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 63,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import json\n",
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "from urllib import parse\n",
+    "import requests\n",
+    "from youtubeApi import YoutubeApi\n",
+    "from utils import Utils\n",
+    "\n",
+    "email = 'kjmkjk097@gmail.com'\n",
+    "yt = YoutubeApi()\n",
+    "ut = Utils()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 65,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'kind': 'youtube#searchListResponse',\n",
+       " 'etag': 'AC_DRYwLJ5vssDNsXvR8klwcuBI',\n",
+       " 'nextPageToken': 'CAEQAA',\n",
+       " 'regionCode': 'KR',\n",
+       " 'pageInfo': {'totalResults': 1000000, 'resultsPerPage': 1},\n",
+       " 'items': [{'kind': 'youtube#searchResult',\n",
+       "   'etag': 'Buqq0v_o1gtxlyb3ADOV1QrEgl4',\n",
+       "   'id': {'kind': 'youtube#video', 'videoId': '29MMeii6ifo'},\n",
+       "   'snippet': {'publishedAt': '2023-03-30T08:00:01Z',\n",
+       "    'channelId': 'UCyn-K7rZLXjGl7VXGweIlcA',\n",
+       "    'title': '[배고파_홍콩_EP.01] 산속으로 딤섬 먹으러 갔습니다',\n",
+       "    'description': '백종원 #배고파홍콩 #홍콩 #딤섬 #카트국수 새소리 들으면서 산에서 먹는 홍콩 딤섬! 들어보셨어요? 긴말 필요 없이 바로 보여 ...',\n",
+       "    'thumbnails': {'default': {'url': 'https://i.ytimg.com/vi/29MMeii6ifo/default.jpg',\n",
+       "      'width': 120,\n",
+       "      'height': 90},\n",
+       "     'medium': {'url': 'https://i.ytimg.com/vi/29MMeii6ifo/mqdefault.jpg',\n",
+       "      'width': 320,\n",
+       "      'height': 180},\n",
+       "     'high': {'url': 'https://i.ytimg.com/vi/29MMeii6ifo/hqdefault.jpg',\n",
+       "      'width': 480,\n",
+       "      'height': 360}},\n",
+       "    'channelTitle': '백종원 PAIK JONG WON',\n",
+       "    'liveBroadcastContent': 'none',\n",
+       "    'publishTime': '2023-03-30T08:00:01Z'}}]}"
+      ]
+     },
+     "execution_count": 65,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# search query\n",
+    "searchQuery = '백종원 홍콩 1'\n",
+    "data = yt.getDictBySearchQuery(searchQuery, 1)\n",
+    "data"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 66,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'viewCount': '2222109',\n",
+       " 'likeCount': '32419',\n",
+       " 'favoriteCount': '0',\n",
+       " 'commentCount': '1548'}"
+      ]
+     },
+     "execution_count": 66,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# 채널의 대만 영상 정보 가져오기\n",
+    "channelId = data['items'][0]['snippet']['channelId']\n",
+    "videoId = data['items'][0]['id']['videoId']\n",
+    "\n",
+    "data2 = yt.getDictByVideoId(videoId)\n",
+    "data2"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 67,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df = ut.make_df(data)\n",
+    "df2 = ut.makeDataFromStatistics(data2)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 68,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>publishedAt</th>\n",
+       "      <th>channelId</th>\n",
+       "      <th>title</th>\n",
+       "      <th>description</th>\n",
+       "      <th>thumbnails</th>\n",
+       "      <th>channelTitle</th>\n",
+       "      <th>liveBroadcastContent</th>\n",
+       "      <th>publishTime</th>\n",
+       "      <th>videoId</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>2023-03-30T08:00:01Z</td>\n",
+       "      <td>UCyn-K7rZLXjGl7VXGweIlcA</td>\n",
+       "      <td>[배고파_홍콩_EP.01] 산속으로 딤섬 먹으러 갔습니다</td>\n",
+       "      <td>백종원 #배고파홍콩 #홍콩 #딤섬 #카트국수 새소리 들으면서 산에서 먹는 홍콩 딤섬...</td>\n",
+       "      <td>{'default': {'url': 'https://i.ytimg.com/vi/29...</td>\n",
+       "      <td>백종원 PAIK JONG WON</td>\n",
+       "      <td>none</td>\n",
+       "      <td>2023-03-30T08:00:01Z</td>\n",
+       "      <td>29MMeii6ifo</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "            publishedAt                 channelId  \\\n",
+       "0  2023-03-30T08:00:01Z  UCyn-K7rZLXjGl7VXGweIlcA   \n",
+       "\n",
+       "                             title  \\\n",
+       "0  [배고파_홍콩_EP.01] 산속으로 딤섬 먹으러 갔습니다   \n",
+       "\n",
+       "                                         description  \\\n",
+       "0  백종원 #배고파홍콩 #홍콩 #딤섬 #카트국수 새소리 들으면서 산에서 먹는 홍콩 딤섬...   \n",
+       "\n",
+       "                                          thumbnails       channelTitle  \\\n",
+       "0  {'default': {'url': 'https://i.ytimg.com/vi/29...  백종원 PAIK JONG WON   \n",
+       "\n",
+       "  liveBroadcastContent           publishTime      videoId  \n",
+       "0                 none  2023-03-30T08:00:01Z  29MMeii6ifo  "
+      ]
+     },
+     "execution_count": 68,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 69,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>viewCount</th>\n",
+       "      <th>likeCount</th>\n",
+       "      <th>favoriteCount</th>\n",
+       "      <th>commentCount</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>2222109</td>\n",
+       "      <td>32419</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1548</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "  viewCount likeCount favoriteCount commentCount\n",
+       "0   2222109     32419             0         1548"
+      ]
+     },
+     "execution_count": 69,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df2"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 70,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "final_data = pd.concat([df, df2], axis=1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 71,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "final_data['country'] = '홍콩'"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 72,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# column 드롭 및 재 정렬\n",
+    "final_data = ut.dropAndReorganizeColumns(final_data)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 73,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>videoId</th>\n",
+       "      <th>title</th>\n",
+       "      <th>description</th>\n",
+       "      <th>viewCount</th>\n",
+       "      <th>likeCount</th>\n",
+       "      <th>favoriteCount</th>\n",
+       "      <th>commentCount</th>\n",
+       "      <th>publishedAt</th>\n",
+       "      <th>channelId</th>\n",
+       "      <th>channelTitle</th>\n",
+       "      <th>country</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>29MMeii6ifo</td>\n",
+       "      <td>[배고파_홍콩_EP.01] 산속으로 딤섬 먹으러 갔습니다</td>\n",
+       "      <td>백종원 #배고파홍콩 #홍콩 #딤섬 #카트국수 새소리 들으면서 산에서 먹는 홍콩 딤섬...</td>\n",
+       "      <td>2222109</td>\n",
+       "      <td>32419</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1548</td>\n",
+       "      <td>2023-03-30T08:00:01Z</td>\n",
+       "      <td>UCyn-K7rZLXjGl7VXGweIlcA</td>\n",
+       "      <td>백종원 PAIK JONG WON</td>\n",
+       "      <td>홍콩</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "       videoId                            title  \\\n",
+       "0  29MMeii6ifo  [배고파_홍콩_EP.01] 산속으로 딤섬 먹으러 갔습니다   \n",
+       "\n",
+       "                                         description viewCount likeCount  \\\n",
+       "0  백종원 #배고파홍콩 #홍콩 #딤섬 #카트국수 새소리 들으면서 산에서 먹는 홍콩 딤섬...   2222109     32419   \n",
+       "\n",
+       "  favoriteCount commentCount           publishedAt                 channelId  \\\n",
+       "0             0         1548  2023-03-30T08:00:01Z  UCyn-K7rZLXjGl7VXGweIlcA   \n",
+       "\n",
+       "        channelTitle country  \n",
+       "0  백종원 PAIK JONG WON      홍콩  "
+      ]
+     },
+     "execution_count": 73,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "final_data"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 74,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# 최종 데이터 프레임 csv에 저장\n",
+    "final_data.to_csv('./data/hongkong_youtube.csv', encoding='utf-8-sig', index=False)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
