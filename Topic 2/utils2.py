@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from dictionary import * 
 
 class Utils2():
     
@@ -158,7 +159,163 @@ class Utils2():
         return startYear , startMonth , endYear, endMonth
         
     
+
+
+
+
+
+
+    #-------------------------
+    # 4.1.1 한글 --> 영문 문자열 변환함수(대륙용)
+    #-------------------------
+    @staticmethod
+    def translateKorToEngForContinent(continentName):
+        '''
+        instruction : 
+            param   : 대륙명(한/영)\n
+            return  : 키에 해당하는 값 리턴\n
+            error   : 에러 메세지 리턴 
+        '''
+        
+        try:
+            # 입력받은 인자가 한글인지 영문인지 판단
+            if is_korean(continentName): 
+                continent_dict = getContinentDictForKorToEng()
+
+            elif is_english(continentName):
+                return continentName
+
+            else: 
+                raise ValueError('ERROR : 유효하지 않는 문자열 입니다!!')
+
+            # 딕셔너리에 인풋된 문자열이 있는지 체크
+            if continentName in continent_dict:
+                translated_string = continent_dict[continentName]
+
+            else:
+                raise KeyError("존재하지 않는 대륙입니다")
+
+        except (ValueError, KeyError) as e:
+             return str(e)
+
+        return translated_string
     
+    
+    #-------------------------
+    # 4.1.2 한글 --> 영문 문자열 변환함수(국가용 only asia)
+    #-------------------------
+    @staticmethod
+    def translateKorToEngForCountry(countryName):
+        '''
+        instruction : 
+            info    : 현재는 아시아만 국가만 지원됩니다.\n
+            param   : 국가명(한/영)\n
+            return  : 키에 해당하는 값 리턴\n
+            error   : 에러 메세지 리턴 
+        '''
+        
+        try:
+            # 입력받은 인자가 한글인지 영문인지 판단
+            if is_korean(countryName): 
+                country_dict = getAsiaDictForKorToEng()
+
+            elif is_english(countryName):
+                return countryName
+
+            else: 
+                raise ValueError('ERROR : 유효하지 않는 문자열 입니다!!')
+
+            # 딕셔너리에 인풋된 문자열이 있는지 체크
+            if countryName in country_dict:
+                translated_string = country_dict[countryName]
+
+            else:
+                raise KeyError("존재하지 않는 국가입니다")
+
+        except (ValueError, KeyError) as e:
+             return str(e)
+
+        return translated_string
+
+
+
+    #-------------------------
+    # 4.1.3 영문 --> 한글 문자열 변환함수(대륙용)
+    #-------------------------
+    @staticmethod
+    def translateEngToKorForContinent(continentName):
+        '''
+        instruction : 
+            param   : 대륙명(한/영)\n
+            return  : 키에 해당하는 값 리턴\n
+            error   : 에러 메세지 리턴 
+        '''
+        
+        try:
+            # 입력받은 인자가 한글인지 영문인지 판단
+            if is_korean(continentName): 
+                return continentName
+
+            elif is_english(continentName):
+                continent_dict = getContinentDictForEngToKor()
+
+            else: 
+                raise ValueError('ERROR : 유효하지 않는 문자열 입니다!!')
+
+            # 딕셔너리에 인풋된 문자열이 있는지 체크
+            if continentName in continent_dict:
+                translated_string = continent_dict[continentName]
+
+            else:
+                raise KeyError("존재하지 않는 대륙입니다")
+
+        except (ValueError, KeyError) as e:
+             return str(e)
+
+        return translated_string
+    
+    
+    #-------------------------
+    # 4.1.4 영문 --> 한글 문자열 변환함수(국가용 only asia)
+    #-------------------------
+    @staticmethod
+    def translateEngToKorForCountry(countryName):
+        '''
+        instruction : 
+            info    : 현재는 아시아만 국가만 지원됩니다.\n
+            param   : 국가명(한/영)\n
+            return  : 키에 해당하는 값 리턴\n
+            error   : 에러 메세지 리턴 
+        '''
+        
+        try:
+            # 입력받은 인자가 한글인지 영문인지 판단
+            if is_korean(countryName): 
+                return countryName
+
+            elif is_english(countryName):
+                country_dict = getAsiaDictForEngToKor()
+
+            else: 
+                raise ValueError('ERROR : 유효하지 않는 문자열 입니다!!')
+
+            # 딕셔너리에 인풋된 문자열이 있는지 체크
+            if countryName in country_dict:
+                translated_string = country_dict[countryName]
+
+            else:
+                raise KeyError("존재하지 않는 국가입니다")
+
+        except (ValueError, KeyError) as e:
+             return str(e)
+
+        return translated_string
+
+
+
+
+
+
 
 
     
@@ -175,6 +332,34 @@ class Utils2():
         resetedIndexData =  df.reset_index(drop=True)
         return resetedIndexData
     
+
+    
+
+
+
+
+
+
+
+
+#-------------------------
+# xxx 문자열이 한글인지 판단
+#-------------------------
+def is_korean(string):
+    for char in string:
+        unicode_value = ord(char)
+        if 0xAC00 <= unicode_value <= 0xD7AF:
+            return True
+    return False
+#-------------------------
+# xxx 문자열이 영문인지 판단
+#-------------------------
+def is_english(string):
+    for char in string:
+        unicode_value = ord(char)
+        if (0x0041 <= unicode_value <= 0x005A) or (0x0061 <= unicode_value <= 0x007A):
+            return True
+    return False
 
 
 #===================================================================================================================
@@ -396,3 +581,138 @@ class Utils2():
     #         counts = pd.concat([counts, data])
 
     #     return counts
+    
+    
+    #-------------------------
+    # 3-4 영문 -> 한글 문자열 변환함수(대륙용)
+    #-------------------------
+    # @staticmethod
+    # def translateEngToKorForContinent(strEng):
+    #     '''
+    #     instruction : 
+    #         True   : 키에 해당하는 값 리턴\n
+    #         False  : 에러 메세지 리턴
+    #     '''
+    #     str =  str.lower()
+    #     dictForContinent = getContinentDictForEngToKor()
+
+    #     # str 값이 dictForContinent의 key와 일치하는지 확인
+    #     if str in dictForContinent:
+    #         resultString = dictForContinent[str]
+    #     else:
+    #         resultString = "존재하지 않는 대륙입니다"
+
+    #     return resultString
+    
+    # #-------------------------
+    # # 3-4 한글 -> 영문 문자열 변환함수(대륙용)
+    # #-------------------------
+    # @staticmethod
+    # def translateKorToEngForContinent(strKor):
+    #     '''
+    #     instruction : 
+    #         True   : 키에 해당하는 값 리턴\n
+    #         False  : 에러 메세지 리턴
+    #     '''
+    #     dictForContinent = getContinentDictForKorToEng()
+
+    #     # str 값이 dictForContinent의 key와 일치하는지 확인
+    #     if str in dictForContinent:
+    #         resultString = dictForContinent[str]
+    #     else:
+    #         resultString = "존재하지 않는 대륙입니다"
+
+    #     return resultString
+    
+    # #-------------------------
+    # # 3-4 영문 -> 한글 문자열 변환함수(국가용)
+    # #-------------------------
+    # @staticmethod
+    # def translateEngToKorForCountry(strEng):
+    #     '''
+    #     instruction : 
+    #         True   : 키에 해당하는 값 리턴\n
+    #         False  : 에러 메세지 리턴
+    #     '''
+    #     str =  str.lower()
+    #     dictForCountryInAsia = getAsiaDictForEngToKor()
+
+    #     # str 값이 dictForContinent의 key와 일치하는지 확인
+    #     if str in dictForCountryInAsia:
+    #         resultString = dictForCountryInAsia[str]
+    #     else:
+    #         resultString = "존재하지 않는 대륙입니다"
+
+    #     return resultString
+    
+    # #-------------------------
+    # # 3-4 영문 -> 한글 문자열 변환함수(국가용)
+    # #-------------------------
+    # @staticmethod
+    # def translateKorToEngForCountry(strKor):
+    #     '''
+    #     instruction : 
+    #         True   : 키에 해당하는 값 리턴\n
+    #         False  : 에러 메세지 리턴
+    #     '''
+    #     dictForCountryInAsia = getAsiaDictForKorToEng()
+
+    #     # str 값이 dictForContinent의 key와 일치하는지 확인
+    #     if str in dictForCountryInAsia:
+    #         resultString = dictForCountryInAsia[str]
+    #     else:
+    #         resultString = "존재하지 않는 대륙입니다"
+
+    #     return resultString
+
+
+
+
+
+
+
+
+
+
+
+
+    # #-------------------------
+    # # 3-4 영문 --> 한글 문자열 변환함수(대륙용)
+    # #-------------------------
+    # @staticmethod
+    # def translateStrForContinent(continentNameForStr):
+    #     '''
+    #     instruction : 
+    #         True   : 키에 해당하는 값 리턴\n
+    #         False  : 에러 메세지 리턴
+    #     '''
+        
+    #     is_korean = is_korean(continentNameForStr)
+    #     is_english = is_korean(continentNameForStr)
+        
+    #     # 입력값이 한국어라면 영어사전 출력
+    #     if(is_korean) : 
+    #         dictForContinent = getContinentDictForKorToEng()
+            
+    #     # 입력값이 영어여도 영어사전 출력    
+    #     elif(is_english) :
+    #         dictForContinent = getContinentDictForKorToEng()
+            
+    #     else : 
+    #         return 'ERROR : 유효하지 않는 문자열 입니다!!'
+            
+
+    #     # str 값이 dictForContinent의 key와 일치하는지 확인
+    #     if str in dictForContinent:
+    #         resultString = dictForContinent[str]
+    #     else:
+    #         resultString = "존재하지 않는 대륙입니다"
+
+    #     return resultString
+
+
+
+
+    
+    
+    
