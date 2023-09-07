@@ -1,6 +1,4 @@
-#===================================================================================================================
-#                                                  유틸기능 모듈 주제2
-#===================================================================================================================
+#유틸기능 모듈 주제2
 
 import csv
 from collections import OrderedDict
@@ -9,12 +7,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from dictionary import * 
+import plotly.graph_objects as go
 
 class Utils2():
-    
-    #-------------------------
+
     # 1. 대륙별 데이터 프레임 생성함수 
-    #-------------------------
     @staticmethod
     def getContinentalDataFrameFromCSV(fileName) :
         '''
@@ -26,10 +23,9 @@ class Utils2():
         newDataFrame =  pd.read_csv(fileName,encoding='utf-8-sig')
         newDataFrame = newDataFrame.iloc[0:233]
         return newDataFrame
-    
-    #-------------------------
+
+
     # 2. 국가별 데이터 프레임 생성함수 
-    #-------------------------
     @staticmethod
     def getCountryDataFrame(continentalDataFrame,countryNameKor) :
         '''
@@ -62,11 +58,8 @@ class Utils2():
             
         return newDataFrame    
     
-    
-    
-    #-------------------------
+
     # 3-1-1. 날짜 데이터타입 변환함수
-    #-------------------------
     @staticmethod
     def changeYearAndMonthDtypeToInt(countryDataFrame) :    
         
@@ -84,9 +77,8 @@ class Utils2():
 
         return countryDataFrame   
     
-    #-------------------------
+
     # 3-1-1. 날짜 데이터타입 변환함수
-    #-------------------------
     @staticmethod
     def changeYearAndMonthDtypeToObject(countryDataFrame) :    
         
@@ -100,10 +92,7 @@ class Utils2():
         return countryDataFrame   
         
 
-    
-    #-------------------------
     # 3-2. 데이터 날짜 필터링 하여 추출하는 함수
-    #-------------------------
     @staticmethod
     def extractDataByDateFilter(countryDataFrame,startDate,endDate) :    
         '''
@@ -120,10 +109,9 @@ class Utils2():
         selectedData = countryDataFrame[(countryDataFrame['Date'] >= startDate) & (countryDataFrame['Date'] <= endDate)]
          
         return selectedData
-        
-    #-------------------------
+
+
     # 3-3. 국가 데이터프레임의 컬럼을 재정렬 하는 함수
-    #-------------------------
     @staticmethod
     def arrangeDataFrameColumns(countryDataFrame) :    
         '''
@@ -138,9 +126,8 @@ class Utils2():
          
         return orderedData
     
-    #-------------------------
+
     # 3-3. 데이터프레임에서 시작과 끝 년월을 문자열로 추출하는 함수
-    #-------------------------
     @staticmethod
     def getStrYearAndMonth(countryDataFrame) :    
         '''
@@ -158,16 +145,8 @@ class Utils2():
          
         return startYear , startMonth , endYear, endMonth
         
-    
 
-
-
-
-
-
-    #-------------------------
     # 4.1.1 한글 --> 영문 문자열 변환함수(대륙용)
-    #-------------------------
     @staticmethod
     def translateKorToEngForContinent(continentName):
         '''
@@ -200,10 +179,8 @@ class Utils2():
 
         return translated_string
     
-    
-    #-------------------------
+
     # 4.1.2 한글 --> 영문 문자열 변환함수(국가용 only asia)
-    #-------------------------
     @staticmethod
     def translateKorToEngForCountry(countryName):
         '''
@@ -238,10 +215,7 @@ class Utils2():
         return translated_string
 
 
-
-    #-------------------------
     # 4.1.3 영문 --> 한글 문자열 변환함수(대륙용)
-    #-------------------------
     @staticmethod
     def translateEngToKorForContinent(continentName):
         '''
@@ -274,10 +248,8 @@ class Utils2():
 
         return translated_string
     
-    
-    #-------------------------
+
     # 4.1.4 영문 --> 한글 문자열 변환함수(국가용 only asia)
-    #-------------------------
     @staticmethod
     def translateEngToKorForCountry(countryName):
         '''
@@ -310,18 +282,50 @@ class Utils2():
              return str(e)
 
         return translated_string
-
-
-
-
-
-
-
-
     
-    #-------------------------
+
+    # 5. 날짜 크기 지정
+    @staticmethod
+    def getPeriod(sizeOfYM):
+        if sizeOfYM % 12 == 0 and (12 <= sizeOfYM <= 120):
+            return f'{sizeOfYM // 12}년'
+        else:
+            return '유효하지 않은 기간'
+        
+
+    # 6. Moving average 계산
+    @staticmethod
+    def calculateMovingAverage(countryNameKor, period, countryDataFrame):
+        countryDataFrame['MovingAverage'] = countryDataFrame['NumVisitors'].rolling(window=12).mean()
+
+        # 원래 시계열 그리기 (파랑선)
+        pre_covid = countryDataFrame.loc[(countryDataFrame['YM'] >= '2013-06-01') & (countryDataFrame['YM'] <= '2024-05-31')]
+        trace1 = go.Scatter(x=pre_covid['YM'], y=pre_covid['NumVisitors'], mode='lines', name='원시계열', line=dict(color='blue', width=3))
+
+        # Moving average 시계열 그리기 (초록선)
+        post_covid = countryDataFrame.loc[(countryDataFrame['YM'] >= '2013-06-01') & (countryDataFrame['YM'] <= '2024-05-31')]
+        trace2 = go.Scatter(x=post_covid['YM'], y=post_covid['MovingAverage'], mode='lines', name='Movingaverage', line=dict(color='green', width=3))
+
+        data = [trace1, trace2]
+
+
+        layout = go.Layout(
+            title=f'{countryNameKor}_{period}치_Moving Average 방문자수 추이 비교_window12',
+            xaxis=dict(
+                title='날짜',
+                tickangle=45 
+            ),
+            yaxis=dict(
+                title='월별 방문자수 (만명)',
+                dtick=5  
+            ),
+            showlegend=True
+        )
+
+        return data, layout
+
+
     # 2 데이터 프레임에 인덱스 초기화 함수(T)
-    #-------------------------
     @staticmethod
     def resetIndexForDataFrame(df):
         '''
@@ -332,387 +336,21 @@ class Utils2():
         resetedIndexData =  df.reset_index(drop=True)
         return resetedIndexData
     
-
     
 
-
-
-
-
-
-
-
-#-------------------------
 # xxx 문자열이 한글인지 판단
-#-------------------------
+
 def is_korean(string):
     for char in string:
         unicode_value = ord(char)
         if 0xAC00 <= unicode_value <= 0xD7AF:
             return True
     return False
-#-------------------------
+
 # xxx 문자열이 영문인지 판단
-#-------------------------
 def is_english(string):
     for char in string:
         unicode_value = ord(char)
         if (0x0041 <= unicode_value <= 0x005A) or (0x0061 <= unicode_value <= 0x007A):
             return True
     return False
-
-
-#===================================================================================================================
-#                                                  현재 사용안함
-#===================================================================================================================  
-
-#   #-----------------
-    
-#   # 1-1 CSV파일에서 특정 컬럼의 값들만 추출하는 함수
-#   @staticmethod
-#   def extract_column_from_csv(file_path, column_name):
-#       with open(file_path, 'r',encoding='utf-8-sig') as csvfile:
-#           reader = csv.DictReader(csvfile)
-#           return [row[column_name] for row in reader]
-
-#   #-----------------
-  
-#   # 1-2 csv파일에서 추출한 국가정보 리스트에서 국가를 추출하는 함수(위 코드와 중복됨 삭제예정)
-#   @staticmethod
-#   def get_country_list_from_csv(country_info):
-#       country_list = [ country for country in country_info]
-#       return country_list
-  
-#   #-----------------
-  
-#   # 1-3 문자열을 받아온뒤 쪼개서 리스트로 반환하는 함수
-#           # notice : 문자열을 입력받아 
-#           # 공백으로 쪼갠뒤, 리스트로 리턴한다.
-#   @staticmethod
-#   def get_splited_string_list(string) :
-#       splited_string_list = string.split()
-#       return splited_string_list
-  
-#   #-----------------
-  
-#   # 1-5 두 개의 리스트를 비교하여 
-#   #     중복되는 문자열을 반환하는 함수
-#   @staticmethod
-#   def get_one_duplicate_string_from_two_lists(source_list, filter_list):
-#     set2 = set(filter_list)
-#     duplicates = set()
-    
-#     for item in source_list:
-#         if item in set2:
-#             duplicates.add(item)
-#         elif duplicates:
-#             return next(iter(duplicates))
-#     return None
-  
-#   #-----------------
-  
-# #   # 1-5 두 개의 리스트를 비교하여 
-# #   #     중복되는 문자열리스트를 반환하는 함수
-# #   @staticmethod
-# #   def get_duplicate_string_from_two_list(source_list, filter_list):
-# #       # 이중리스트 제거
-# #       flat_filter_list = Utils.get_flatten_list(filter_list)
-      
-# #       # 중복 문자열 제거
-# #       duplicate_list = [
-# #           source_item 
-# #           for source_item in source_list 
-# #           if source_item in flat_filter_list
-# #       ]
-      
-# #       return duplicate_list
-  
-# #   #-----------------
-  
-#   # 1-6 리스트 요소의 중복제거 함수
-#   @staticmethod
-#   def get_unique_values(lst):
-#       return list(OrderedDict.fromkeys(lst))
-
-#   #-----------------
-  
-#   # 1-7 이중 리스트 해제(평탄화) 함수
-#   @staticmethod
-#   def get_flatten_list(lst):
-#       return [item for sublist in lst for item in sublist]
-
-#   #-----------------
-  
-#   # 1-8 두 개의 리스트를 비교하여 
-#   #     문자열 중복시 True 값을 반환하는 함수
-#   @staticmethod
-#   def get_boolean_list_of_duplicates(source_list, filter_list):
-#       # 이중리스트 제거
-#       flat_filter_list = Utils.get_flatten_list(filter_list)
-      
-#       # 중복 여부 확인
-#       boolean_duplicate_list = [
-#           True if source_item in flat_filter_list else False 
-#           for source_item in source_list 
-#       ]
-      
-#       return boolean_duplicate_list
-  
-#   #-----------------  
-  
-  
-# #-----------------
-  
-#   # 1-9 단일 요소를 리스트로 만드는 함수
-#   @staticmethod
-#   def formatStringToList(str):
-#         resultList = [str]
-#         return resultList
-  
-# #-----------------  
-
-
-
-
-
-# # 아이템에서 비디오 데이터와 비디오 ID를 추출
-# def extract_video_data(item):
-#     videoDataFrame = pd.DataFrame(item['snippet'])
-#     videoId = item['id']['videoId']
-
-#     return videoDataFrame, videoId
-
-
-
-
-
-# def make_df(dictData) : 
-#     '''
-#     instruction : 
-#         텅빈 데이터생성후,
-#         원본 딕셔너리 데이터에서, 스니펫(딕셔너리)과 비디오아이디(문자열) 추출,
-#         concat으로 텅빈 videos 데이터프레임 에 새로 생성한 스니펫(딕셔너리)을 넣은 데이터프레임을 합치고
-#         ignore_index으로 서로다른 데이터프레임의 인덱스 중복을 방지함,
-#         videoDataFrame에서 불필요한 컬럼 삭제후
-#         비디오 아이디 컬럼 추가       
-#     '''
-    
-#     # 빈 데이터프레임과 리스트 생성
-#     videoDataFrame = pd.DataFrame()
-#     videoIds = []  
-    
-#     # 원본 딕셔너리 데이터에서 스니펫(딕셔너리)과 비디오아이디(문자열) 추출
-#     # 각 아이템에 대해 비디오 정보와 ID를 추출
-#     for item in dictData['items']:
-#         video_data, video_id = extract_video_data(item)
-        
-#         # 비디오 정보 추가
-#         videos = pd.concat([videos, video_data])
-        
-#         # 비디오 ID 추가
-#         videoIds.append(video_id)
- 
-#     # 비디오 ID 리스트를 시리즈로 변환하고 이름 설정
-#     videoIdsSeries = pd.Series(videoIds, name='videoId')
-    
-#     # 불필요한 컬럼 삭제    
-#     videosCleaned = videos.drop(['high', 'medium']).reset_index(drop=True)
-    
-#     # 비디오 정보와 ID 결합
-#     final_videos_df = pd.concat([videosCleaned, videoIdsSeries], axis=1)
-    
-#     return final_videos_df
-        
-#     # videoDataFrame.drop(['high', 'medium'], axis=1, inplace=True)  
-#     # 비디오 아이디 컬럼 추가
-#     videoDataFrame['videoId'] = videoIds  
-#     return videoDataFrame 
-
-
-
-    # #----------------------
-    # # 데이터 프레임 생성함수 테스트
-    # #----------------------    
-    # def make_df(dictData) : 
-    #     '''
-    #     instruction : 
-    #           텅빈 데이터생성후,
-    #           원본 딕셔너리 데이터에서, 스니펫(딕셔너리)과 비디오아이디(문자열) 추출,
-    #           concat으로 텅빈 videos 데이터프레임 에 새로 생성한 스니펫(딕셔너리)을 넣은 데이터프레임을 합치고
-    #           ignore_index으로 서로다른 데이터프레임의 인덱스 중복을 방지함,
-    #           videoDataFrame에서 불필요한 컬럼 삭제후
-    #           비디오 아이디 컬럼 추가       
-    #     '''
-        
-    #     # 텅빈 데이터생성
-    #     videoDataFrame = pd.DataFrame()
-    #     videoIds = []  
-        
-    #     # 원본 딕셔너리 데이터에서 스니펫(딕셔너리)과 비디오아이디(문자열) 추출
-    #     for item in dictData['items']:  
-    #         snippet = item['snippet'] 
-    #         videoId = item['id']['videoId'] 
-
-    #         # 데이터프레임 조합
-    #         videoDataFrame = pd.concat([videoDataFrame, pd.DataFrame(snippet)], ignore_index=True)           
-    #         # 리스트에 요소 추가
-    #         videoIds.append(videoId) 
-            
-    #     # 불필요한 컬럼 삭제    
-    #     videoDataFrame.drop(['high', 'medium'], axis=1, inplace=True)  
-    #     # 비디오 아이디 컬럼 추가
-    #     videoDataFrame['videoId'] = videoIds  
-
-    #     return videoDataFrame  
-    
-    
-    # # 비디오 조회수, 좋아요 수 등을 가져옴
-    # def get_video_detail(df) : 
-    #     counts = pd.DataFrame()
-
-    #     for i in df['videoId'] :
-    #         videoQuery = f"videos?part=statistics&maxResults=1&key={apiKey}&id={parse.quote(i)}"
-
-    #         res = requests.get(url +  videoQuery)
-    #         data = json.loads(res.text)
-    #         data = data['items'][0]['statistics']
-    #         data = pd.DataFrame.from_dict([data])
-
-    #         counts = pd.concat([counts, data])
-
-    #     return counts
-    
-    
-    #-------------------------
-    # 3-4 영문 -> 한글 문자열 변환함수(대륙용)
-    #-------------------------
-    # @staticmethod
-    # def translateEngToKorForContinent(strEng):
-    #     '''
-    #     instruction : 
-    #         True   : 키에 해당하는 값 리턴\n
-    #         False  : 에러 메세지 리턴
-    #     '''
-    #     str =  str.lower()
-    #     dictForContinent = getContinentDictForEngToKor()
-
-    #     # str 값이 dictForContinent의 key와 일치하는지 확인
-    #     if str in dictForContinent:
-    #         resultString = dictForContinent[str]
-    #     else:
-    #         resultString = "존재하지 않는 대륙입니다"
-
-    #     return resultString
-    
-    # #-------------------------
-    # # 3-4 한글 -> 영문 문자열 변환함수(대륙용)
-    # #-------------------------
-    # @staticmethod
-    # def translateKorToEngForContinent(strKor):
-    #     '''
-    #     instruction : 
-    #         True   : 키에 해당하는 값 리턴\n
-    #         False  : 에러 메세지 리턴
-    #     '''
-    #     dictForContinent = getContinentDictForKorToEng()
-
-    #     # str 값이 dictForContinent의 key와 일치하는지 확인
-    #     if str in dictForContinent:
-    #         resultString = dictForContinent[str]
-    #     else:
-    #         resultString = "존재하지 않는 대륙입니다"
-
-    #     return resultString
-    
-    # #-------------------------
-    # # 3-4 영문 -> 한글 문자열 변환함수(국가용)
-    # #-------------------------
-    # @staticmethod
-    # def translateEngToKorForCountry(strEng):
-    #     '''
-    #     instruction : 
-    #         True   : 키에 해당하는 값 리턴\n
-    #         False  : 에러 메세지 리턴
-    #     '''
-    #     str =  str.lower()
-    #     dictForCountryInAsia = getAsiaDictForEngToKor()
-
-    #     # str 값이 dictForContinent의 key와 일치하는지 확인
-    #     if str in dictForCountryInAsia:
-    #         resultString = dictForCountryInAsia[str]
-    #     else:
-    #         resultString = "존재하지 않는 대륙입니다"
-
-    #     return resultString
-    
-    # #-------------------------
-    # # 3-4 영문 -> 한글 문자열 변환함수(국가용)
-    # #-------------------------
-    # @staticmethod
-    # def translateKorToEngForCountry(strKor):
-    #     '''
-    #     instruction : 
-    #         True   : 키에 해당하는 값 리턴\n
-    #         False  : 에러 메세지 리턴
-    #     '''
-    #     dictForCountryInAsia = getAsiaDictForKorToEng()
-
-    #     # str 값이 dictForContinent의 key와 일치하는지 확인
-    #     if str in dictForCountryInAsia:
-    #         resultString = dictForCountryInAsia[str]
-    #     else:
-    #         resultString = "존재하지 않는 대륙입니다"
-
-    #     return resultString
-
-
-
-
-
-
-
-
-
-
-
-
-    # #-------------------------
-    # # 3-4 영문 --> 한글 문자열 변환함수(대륙용)
-    # #-------------------------
-    # @staticmethod
-    # def translateStrForContinent(continentNameForStr):
-    #     '''
-    #     instruction : 
-    #         True   : 키에 해당하는 값 리턴\n
-    #         False  : 에러 메세지 리턴
-    #     '''
-        
-    #     is_korean = is_korean(continentNameForStr)
-    #     is_english = is_korean(continentNameForStr)
-        
-    #     # 입력값이 한국어라면 영어사전 출력
-    #     if(is_korean) : 
-    #         dictForContinent = getContinentDictForKorToEng()
-            
-    #     # 입력값이 영어여도 영어사전 출력    
-    #     elif(is_english) :
-    #         dictForContinent = getContinentDictForKorToEng()
-            
-    #     else : 
-    #         return 'ERROR : 유효하지 않는 문자열 입니다!!'
-            
-
-    #     # str 값이 dictForContinent의 key와 일치하는지 확인
-    #     if str in dictForContinent:
-    #         resultString = dictForContinent[str]
-    #     else:
-    #         resultString = "존재하지 않는 대륙입니다"
-
-    #     return resultString
-
-
-
-
-    
-    
-    

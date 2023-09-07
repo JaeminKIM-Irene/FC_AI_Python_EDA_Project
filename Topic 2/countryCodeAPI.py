@@ -1,6 +1,5 @@
-#===================================================================================================================
-#                                                  국가코드정보 API 세팅
-#===================================================================================================================
+#국가코드정보 API 세팅
+
 from urllib import parse
 import requests
 import json
@@ -42,9 +41,7 @@ class CountryCodeApi():
       rawEngCoutryList = [item['국가명(영문)'] for item in jsonData['data']]
       return rawEngCoutryList
     
-  #-------------------------
   # 국가정보 데이터 프레임 생성함수 
-  #-------------------------
   @staticmethod
   def makeDataFromStatistics(Data) :
       countryDataFrame = pd.DataFrame()

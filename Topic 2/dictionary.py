@@ -127,11 +127,6 @@ def getSeabornPaletteDict() :
     return palette
 
 
-
-
-
-
-
 #0.xx) 옵션(선택사항) 주제2의 inpynb 파일 실행용
 #-------------------------
 # selectedCountryEng = 'japan'    # 국가명선택(영문)
